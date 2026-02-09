@@ -23,7 +23,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Handle 403 Forbidden - redirect to unauthorized page
-      if (error.status === 403) {
+      // Don't redirect for auth endpoints (e.g., /me returns 403 when not logged in)
+      if (error.status === 403 && !req.url.includes('/api/auth/')) {
         router.navigate(['/unauthorized']);
       }
 

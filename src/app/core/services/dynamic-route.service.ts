@@ -33,8 +33,16 @@ export class DynamicRouteService {
    * Only routes where the user has at least one required role will be registered.
    */
   registerRoutesForRoles(userRoles: string[]): void {
+    // Normalize roles - handle both "ROLE_X" and "X" formats
+    const normalizedUserRoles = userRoles.map(role =>
+      role.startsWith('ROLE_') ? role.substring(5) : role
+    );
+
     const allowedFeatures = FEATURE_ROUTES.filter(feature =>
-      feature.roles.some(role => userRoles.includes(role))
+      feature.roles.some(role =>
+        normalizedUserRoles.includes(role) ||
+        normalizedUserRoles.includes(role.replace('ROLE_', ''))
+      )
     );
 
     const navItems: NavItem[] = allowedFeatures.map(feature => ({

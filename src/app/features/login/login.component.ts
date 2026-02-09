@@ -50,14 +50,14 @@ import { AuthService } from '../../core/services/auth.service';
           </div>
         </form>
 
-        <!-- Mock Users for Development -->
+        <!-- Test Users for Development -->
         <div class="mock-users">
           <div class="mock-users-header">
             <span class="dev-badge">DEV</span>
-            <span>Quick Login (Mock Users)</span>
+            <span>Quick Login (Test Users)</span>
           </div>
           <div class="mock-user-grid">
-            <button class="mock-user-btn" (click)="mockLogin('user1')">
+            <button class="mock-user-btn" (click)="quickLogin('user1', 'password1')" [disabled]="loading">
               <strong>user1</strong>
               <span class="roles">Admin - All Access</span>
               <span class="role-tags">
@@ -65,14 +65,14 @@ import { AuthService } from '../../core/services/auth.service';
                 <span class="tag payments">PAYMENTS</span>
               </span>
             </button>
-            <button class="mock-user-btn" (click)="mockLogin('user2')">
+            <button class="mock-user-btn" (click)="quickLogin('user2', 'password2')" [disabled]="loading">
               <strong>user2</strong>
               <span class="roles">Orders Only</span>
               <span class="role-tags">
                 <span class="tag orders">ORDERS</span>
               </span>
             </button>
-            <button class="mock-user-btn" (click)="mockLogin('user3')">
+            <button class="mock-user-btn" (click)="quickLogin('user3', 'password3')" [disabled]="loading">
               <strong>user3</strong>
               <span class="roles">Payments Only</span>
               <span class="role-tags">
@@ -294,8 +294,21 @@ export class LoginComponent {
     });
   }
 
-  mockLogin(username: string): void {
-    this.authService.mockLogin(username);
-    this.router.navigate(['/']);
+  /**
+   * Quick login using test credentials (calls real backend API)
+   */
+  quickLogin(username: string, password: string): void {
+    this.loading = true;
+    this.error = '';
+
+    this.authService.login(username, password).subscribe({
+      next: () => {
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        this.error = err.error?.message || 'Login failed. Is the backend running?';
+        this.loading = false;
+      }
+    });
   }
 }
