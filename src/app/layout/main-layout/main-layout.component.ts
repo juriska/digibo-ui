@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DynamicRouteService } from '../../core/services/dynamic-route.service';
@@ -7,7 +7,7 @@ import { DynamicRouteService } from '../../core/services/dynamic-route.service';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   template: `
     <div class="layout">
       <!-- Sidebar Navigation -->
@@ -15,38 +15,42 @@ import { DynamicRouteService } from '../../core/services/dynamic-route.service';
         <div class="logo">
           <h2>DigiBo</h2>
         </div>
-
+    
         <nav class="nav-menu">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
             <span class="nav-icon">🏠</span>
             <span>Dashboard</span>
           </a>
-
+    
           <!-- Dynamic navigation items based on registered routes -->
-          <a *ngFor="let navItem of dynamicRouteService.activeNavItems()"
-             [routerLink]="'/' + navItem.path"
-             routerLinkActive="active"
-             class="nav-item">
-            <span class="nav-icon">{{ navItem.icon }}</span>
-            <span>{{ navItem.label }}</span>
-            <span class="role-tag">{{ navItem.roles[0] }}</span>
-          </a>
+          @for (navItem of dynamicRouteService.activeNavItems(); track navItem) {
+            <a
+              [routerLink]="'/' + navItem.path"
+              routerLinkActive="active"
+              class="nav-item">
+              <span class="nav-icon">{{ navItem.icon }}</span>
+              <span>{{ navItem.label }}</span>
+              <span class="role-tag">{{ navItem.roles[0] }}</span>
+            </a>
+          }
         </nav>
-
+    
         <div class="sidebar-footer">
-          <div class="user-info" *ngIf="authService.isAuthenticated()">
-            <div class="user-avatar">{{ userInitial }}</div>
-            <div class="user-details">
-              <span class="user-name">{{ authService.user()?.username }}</span>
-              <span class="user-roles">{{ userRolesDisplay }}</span>
+          @if (authService.isAuthenticated()) {
+            <div class="user-info">
+              <div class="user-avatar">{{ userInitial }}</div>
+              <div class="user-details">
+                <span class="user-name">{{ authService.user()?.username }}</span>
+                <span class="user-roles">{{ userRolesDisplay }}</span>
+              </div>
             </div>
-          </div>
+          }
           <button class="logout-btn" (click)="logout()">
             Logout
           </button>
         </div>
       </aside>
-
+    
       <!-- Main Content -->
       <main class="main-content">
         <header class="header">
@@ -54,18 +58,20 @@ import { DynamicRouteService } from '../../core/services/dynamic-route.service';
             <h1>DigiBo Backoffice</h1>
           </div>
           <div class="header-actions">
-            <span class="user-badge" *ngIf="authService.isAuthenticated()">
-              {{ authService.user()?.username }}
-            </span>
+            @if (authService.isAuthenticated()) {
+              <span class="user-badge">
+                {{ authService.user()?.username }}
+              </span>
+            }
           </div>
         </header>
-
+    
         <div class="content">
           <router-outlet></router-outlet>
         </div>
       </main>
     </div>
-  `,
+    `,
   styles: [`
     .layout {
       display: flex;

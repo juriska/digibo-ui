@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
     <div class="login-page">
       <div class="login-card">
@@ -15,7 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
           <h1>DigiBo</h1>
           <p>Backoffice Login</p>
         </div>
-
+    
         <form (ngSubmit)="onLogin()" class="login-form">
           <div class="form-group">
             <label for="username">Username</label>
@@ -26,9 +26,9 @@ import { AuthService } from '../../core/services/auth.service';
               name="username"
               placeholder="Enter username"
               required
-            />
+              />
           </div>
-
+    
           <div class="form-group">
             <label for="password">Password</label>
             <input
@@ -38,18 +38,20 @@ import { AuthService } from '../../core/services/auth.service';
               name="password"
               placeholder="Enter password"
               required
-            />
+              />
           </div>
-
+    
           <button type="submit" class="login-btn" [disabled]="loading">
             {{ loading ? 'Logging in...' : 'Login' }}
           </button>
-
-          <div class="error-message" *ngIf="error">
-            {{ error }}
-          </div>
+    
+          @if (error) {
+            <div class="error-message">
+              {{ error }}
+            </div>
+          }
         </form>
-
+    
         <!-- Test Users for Development -->
         <div class="mock-users">
           <div class="mock-users-header">
@@ -81,10 +83,10 @@ import { AuthService } from '../../core/services/auth.service';
             </button>
           </div>
         </div>
-
+    
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .login-page {
       min-height: 100vh;

@@ -11,11 +11,11 @@ import { CommonModule } from '@angular/common';
         <h1>Orders Management</h1>
         <p class="role-badge">Required Role: <code>RBOFFORDERS</code></p>
       </div>
-
+    
       <div class="content-card">
         <h2>Orders Dashboard</h2>
         <p>This page is only visible to users with the <strong>RBOFFORDERS</strong> role.</p>
-
+    
         <div class="demo-table">
           <h3>Recent Orders</h3>
           <table>
@@ -29,23 +29,25 @@ import { CommonModule } from '@angular/common';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let order of mockOrders">
-                <td>{{ order.id }}</td>
-                <td>{{ order.customer }}</td>
-                <td>{{ order.amount | currency:'EUR' }}</td>
-                <td>
-                  <span class="status" [class]="order.status.toLowerCase()">
-                    {{ order.status }}
-                  </span>
-                </td>
-                <td>{{ order.date }}</td>
-              </tr>
+              @for (order of mockOrders; track order) {
+                <tr>
+                  <td>{{ order.id }}</td>
+                  <td>{{ order.customer }}</td>
+                  <td>{{ order.amount | currency:'EUR' }}</td>
+                  <td>
+                    <span class="status" [class]="order.status.toLowerCase()">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td>{{ order.date }}</td>
+                </tr>
+              }
             </tbody>
           </table>
         </div>
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .orders-page {
       padding: 20px;

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { DynamicRouteService } from '../../core/services/dynamic-route.service';
@@ -7,14 +7,14 @@ import { DynamicRouteService } from '../../core/services/dynamic-route.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   template: `
     <div class="dashboard">
       <div class="welcome-section">
         <h1>Welcome, {{ authService.user()?.username }}!</h1>
         <p>You are logged into DigiBo Backoffice</p>
       </div>
-
+    
       <div class="user-info-card">
         <h3>Your Access</h3>
         <div class="info-grid">
@@ -29,42 +29,50 @@ import { DynamicRouteService } from '../../core/services/dynamic-route.service';
           <div class="info-item full-width">
             <label>Roles</label>
             <div class="role-list">
-              <span class="role-chip" *ngFor="let role of authService.user()?.roles">
-                {{ role }}
-              </span>
-              <span class="no-roles" *ngIf="!authService.user()?.roles?.length">
-                No roles assigned
-              </span>
+              @for (role of authService.user()?.roles; track role) {
+                <span class="role-chip">
+                  {{ role }}
+                </span>
+              }
+              @if (!authService.user()?.roles?.length) {
+                <span class="no-roles">
+                  No roles assigned
+                </span>
+              }
             </div>
           </div>
         </div>
       </div>
-
+    
       <div class="quick-links">
         <h3>Available Modules</h3>
         <div class="module-grid">
           <!-- Dynamic modules based on user permissions -->
-          <div class="module-card accessible"
-               *ngFor="let module of dynamicRouteService.activeNavItems()">
-            <div class="module-icon">{{ module.icon }}</div>
-            <div class="module-info">
-              <h4>{{ module.label }}</h4>
-              <p>{{ getModuleDescription(module.path) }}</p>
-              <span class="required-role">Role: {{ module.roles.join(' or ') }}</span>
+          @for (module of dynamicRouteService.activeNavItems(); track module) {
+            <div class="module-card accessible"
+              >
+              <div class="module-icon">{{ module.icon }}</div>
+              <div class="module-info">
+                <h4>{{ module.label }}</h4>
+                <p>{{ getModuleDescription(module.path) }}</p>
+                <span class="required-role">Role: {{ module.roles.join(' or ') }}</span>
+              </div>
+              <a [routerLink]="'/' + module.path" class="module-link">
+                Open →
+              </a>
             </div>
-            <a [routerLink]="'/' + module.path" class="module-link">
-              Open →
-            </a>
-          </div>
-
+          }
+    
           <!-- Message when no modules available -->
-          <div class="no-modules" *ngIf="dynamicRouteService.activeNavItems().length === 0">
-            <p>No modules available for your account. Contact your administrator for access.</p>
-          </div>
+          @if (dynamicRouteService.activeNavItems().length === 0) {
+            <div class="no-modules">
+              <p>No modules available for your account. Contact your administrator for access.</p>
+            </div>
+          }
         </div>
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .dashboard {
       padding: 24px;

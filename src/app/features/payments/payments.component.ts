@@ -14,23 +14,27 @@ import { AuthService } from '../../core/services/auth.service';
           Required Roles: <code>RBOPAYMENT</code> or <code>RBOPAYMENTVIEW</code>
         </p>
       </div>
-
+    
       <div class="content-card">
         <h2>Payments Dashboard</h2>
         <p>This page is visible to users with <strong>RBOPAYMENT</strong> or <strong>RBOPAYMENTVIEW</strong> role.</p>
-
+    
         <div class="user-permissions">
           <h4>Your Access Level:</h4>
           <ul>
-            <li *ngIf="canEdit">
-              <span class="permission-granted">Full Access (RBOPAYMENT)</span> - Can view and edit payments
-            </li>
-            <li *ngIf="canViewOnly">
-              <span class="permission-view">View Only (RBOPAYMENTVIEW)</span> - Can only view payments
-            </li>
+            @if (canEdit) {
+              <li>
+                <span class="permission-granted">Full Access (RBOPAYMENT)</span> - Can view and edit payments
+              </li>
+            }
+            @if (canViewOnly) {
+              <li>
+                <span class="permission-view">View Only (RBOPAYMENTVIEW)</span> - Can only view payments
+              </li>
+            }
           </ul>
         </div>
-
+    
         <div class="demo-table">
           <h3>Recent Payments</h3>
           <table>
@@ -41,45 +45,55 @@ import { AuthService } from '../../core/services/auth.service';
                 <th>To Account</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th *ngIf="canEdit">Actions</th>
+                @if (canEdit) {
+                  <th>Actions</th>
+                }
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let payment of mockPayments">
-                <td>{{ payment.id }}</td>
-                <td>{{ payment.fromAccount }}</td>
-                <td>{{ payment.toAccount }}</td>
-                <td>{{ payment.amount | currency:'EUR' }}</td>
-                <td>
-                  <span class="status" [class]="payment.status.toLowerCase()">
-                    {{ payment.status }}
-                  </span>
-                </td>
-                <td *ngIf="canEdit">
-                  <button class="btn-action" (click)="approvePayment(payment)">
-                    Approve
-                  </button>
-                  <button class="btn-action btn-secondary" (click)="rejectPayment(payment)">
-                    Reject
-                  </button>
-                </td>
-              </tr>
+              @for (payment of mockPayments; track payment) {
+                <tr>
+                  <td>{{ payment.id }}</td>
+                  <td>{{ payment.fromAccount }}</td>
+                  <td>{{ payment.toAccount }}</td>
+                  <td>{{ payment.amount | currency:'EUR' }}</td>
+                  <td>
+                    <span class="status" [class]="payment.status.toLowerCase()">
+                      {{ payment.status }}
+                    </span>
+                  </td>
+                  @if (canEdit) {
+                    <td>
+                      <button class="btn-action" (click)="approvePayment(payment)">
+                        Approve
+                      </button>
+                      <button class="btn-action btn-secondary" (click)="rejectPayment(payment)">
+                        Reject
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
             </tbody>
           </table>
         </div>
-
-        <div class="action-panel" *ngIf="canEdit">
-          <h3>Payment Actions</h3>
-          <button class="btn-primary">Create New Payment</button>
-          <button class="btn-secondary">Export Report</button>
-        </div>
-
-        <div class="view-only-notice" *ngIf="canViewOnly && !canEdit">
-          <p>You have view-only access. Contact administrator for edit permissions.</p>
-        </div>
+    
+        @if (canEdit) {
+          <div class="action-panel">
+            <h3>Payment Actions</h3>
+            <button class="btn-primary">Create New Payment</button>
+            <button class="btn-secondary">Export Report</button>
+          </div>
+        }
+    
+        @if (canViewOnly && !canEdit) {
+          <div class="view-only-notice">
+            <p>You have view-only access. Contact administrator for edit permissions.</p>
+          </div>
+        }
       </div>
     </div>
-  `,
+    `,
   styles: [`
     .payments-page {
       padding: 20px;
