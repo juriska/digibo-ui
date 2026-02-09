@@ -2,8 +2,8 @@
 
 ## Tech Stack
 
-- **Framework:** Angular 19+ (targeting Angular 21+ patterns)
-- **Language:** TypeScript 5.7+ (strict mode)
+- **Framework:** Angular 21+ (zoneless)
+- **Language:** TypeScript 5.9+ (strict mode)
 - **Styles:** SCSS (inline styles in components)
 - **Shared UI Library:** `@citadele/common-parts` (in `./common-parts/`)
 - **Reactive:** Angular Signals + RxJS 7.8
@@ -317,7 +317,7 @@ export interface Config {
 - Prefer signals over `async` pipe for better performance
 - Use `track` in `@for` loops for efficient DOM recycling
 - Avoid unnecessary `subscribe()` — prefer declarative signal/computed chains
-- Use `provideZoneChangeDetection({ eventCoalescing: true })` (already configured)
+- App uses `provideZonelessChangeDetection()` — no zone.js
 - Consider `DestroyRef` + `takeUntilDestroyed()` for subscription cleanup
 
 ### 12. Subscription Management
@@ -391,11 +391,12 @@ Only use Angular Material when no suitable component exists in `common-parts`.
 
 ## Testing
 
-- Test runner: Karma + Jasmine
+- Test runner: Vitest (via `@angular/build:unit-test`)
 - Test files: `*.spec.ts` alongside the source file
 - Tests are currently skipped by default in schematics
 - When writing tests, prefer `TestBed` with standalone component setup
-- Mock services using `jasmine.createSpyObj` or provide stubs
+- Mock services using `vi.fn()` or provide stubs
+- Run tests with `npx ng test`
 
 ---
 
