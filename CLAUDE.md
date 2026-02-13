@@ -2,13 +2,16 @@
 
 ## Tech Stack
 
-- **Framework:** Angular 21+ (zoneless)
-- **Language:** TypeScript 5.9+ (strict mode)
+- **Framework:** Angular 21.1 (zoneless, standalone-by-default)
+- **Language:** TypeScript 5.9 (strict mode)
+- **Build:** `@angular/build:application` (esbuild-based)
+- **Testing:** Vitest 4 via `@angular/build:unit-test`
 - **Styles:** SCSS (inline styles in components)
-- **Shared UI Library:** `@citadele/common-parts` (in `./common-parts/`)
+- **Shared UI Library:** `@citadele/common-parts` v1.13.4 (local, in `./common-parts/`)
 - **Reactive:** Angular Signals + RxJS 7.8
 - **Routing:** Standalone, lazy-loaded, dynamic role-based routes
 - **Auth:** httpOnly cookie-based (no localStorage tokens)
+- **Change detection:** Zoneless (`provideZonelessChangeDetection()`, no zone.js)
 
 ---
 
@@ -50,22 +53,23 @@ src/app/
 
 ## Angular Best Practices (21+)
 
-### 1. Components — Always Standalone
+### 1. Components — Standalone by Default
 
-All components MUST be standalone. Never use NgModules for declaring components.
+All components are standalone by default in Angular 21. Do NOT write `standalone: true` — it is the default and redundant. Never use NgModules for declaring components.
 
 ```typescript
 @Component({
   selector: 'app-my-feature',
-  standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [RouterModule, FormsModule],
   template: `...`,
-  styles: [`...`]
+  styles: `...`
 })
 export class MyFeatureComponent { }
 ```
 
 **Rules:**
+- Do NOT add `standalone: true` — it is the default since Angular 19
+- Do NOT import `CommonModule` — use built-in control flow (`@if`, `@for`) instead
 - Use inline `template` and `styles` for small/medium components
 - Use `templateUrl` and `styleUrl` only when template exceeds ~50 lines
 - Every component must declare its own `imports` array
@@ -106,6 +110,26 @@ export class MyComponent {
   // Derived state — use computed
   itemCount = computed(() => this.items().length);
   hasSelection = computed(() => this.selectedItem() !== null);
+
+  // Linked signal — derived state with local override
+  currentPage = linkedSignal(() => this.selectedItem() ? 1 : 0);
+}
+```
+
+```typescript
+// Signal-based component I/O (preferred over @Input/@Output decorators)
+export class ItemCardComponent {
+  // Required input
+  item = input.required<Item>();
+
+  // Optional input with default
+  showDetails = input(false);
+
+  // Two-way binding with model()
+  selected = model(false);
+
+  // Output
+  deleted = output<Item>();
 }
 ```
 
@@ -128,18 +152,19 @@ export class MyService {
 **Signal rules:**
 - Use `signal()` for mutable state
 - Use `computed()` for derived/calculated state
+- Use `linkedSignal()` for derived state that can be locally overridden (e.g., reset on parent change)
 - Use `effect()` sparingly — only for side effects (logging, localStorage sync)
 - Expose signals as `asReadonly()` from services
 - Prefer `signal()` over `BehaviorSubject` for new code
 - Read signal values in templates with `signalName()` syntax
-- Use `input()` / `output()` signal-based APIs for component I/O when available
+- Use `input()` / `output()` / `model()` signal-based APIs for component I/O (preferred over `@Input`/`@Output` decorators)
+- Use `resource()` / `httpResource()` for async data loading tied to signal state
 
 ### 4. Control Flow — Use Built-in Syntax
 
-Prefer Angular's built-in control flow (`@if`, `@for`, `@switch`) over structural directives.
+Use Angular's built-in control flow (`@if`, `@for`, `@switch`). The legacy `*ngIf`/`*ngFor`/`[ngSwitch]` structural directives are **deprecated** in Angular 21.
 
 ```html
-<!-- GOOD — built-in control flow -->
 @if (loading()) {
   <app-loader />
 } @else if (error()) {
@@ -159,17 +184,11 @@ Prefer Angular's built-in control flow (`@if`, `@for`, `@switch`) over structura
 }
 ```
 
-```html
-<!-- BAD — legacy structural directives (avoid in new code) -->
-<div *ngIf="loading">...</div>
-<div *ngFor="let item of items">...</div>
-<div [ngSwitch]="status">...</div>
-```
-
 **Rules:**
 - Always provide `track` expression in `@for` (use unique identifier like `item.id`)
 - Use `@empty` block for empty-state messaging
-- Migrate `*ngIf` / `*ngFor` to `@if` / `@for` when touching existing code
+- NEVER use `*ngIf` / `*ngFor` / `[ngSwitch]` — they are deprecated
+- No need to import `CommonModule` — built-in control flow works without it
 
 ### 5. Routing — Lazy Loading with Dynamic Registration
 
@@ -194,16 +213,15 @@ Prefer Angular's built-in control flow (`@if`, `@for`, `@switch`) over structura
 ### 6. Services
 
 ```typescript
+// Traditional pattern (Observable-based) — still valid for complex pipelines
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = '/api/data';
 
-  // State management with signals
   private _items = signal<Item[]>([]);
   readonly items = this._items.asReadonly();
 
-  // HTTP calls return Observable — subscribe in components
   loadItems(): Observable<Item[]> {
     return this.http.get<Item[]>(this.API_URL).pipe(
       tap(items => this._items.set(items)),
@@ -218,12 +236,30 @@ export class DataService {
 }
 ```
 
+```typescript
+// Signal-based pattern with httpResource — preferred for simple CRUD
+export class OrdersComponent {
+  private selectedId = signal<string | null>(null);
+
+  // Automatically fetches when selectedId changes
+  private orderResource = httpResource<Order>(() =>
+    this.selectedId() ? `/api/orders/${this.selectedId()}` : undefined
+  );
+
+  order = this.orderResource.value;       // Signal<Order | undefined>
+  loading = this.orderResource.isLoading;  // Signal<boolean>
+  error = this.orderResource.error;        // Signal<unknown>
+}
+```
+
 **Service rules:**
 - Always use `providedIn: 'root'` for singleton services
 - Keep API URLs as private readonly constants
 - Use `withCredentials: true` for all API calls (handled by interceptor)
-- Return `Observable` from HTTP methods — let components manage subscriptions
+- For simple data fetching, prefer `httpResource()` (signal-driven, no manual subscribe)
+- For complex pipelines (retries, debounce, switchMap), use `Observable` + `HttpClient`
 - Use signals for state; expose as `readonly`
+- `HttpClient` is provided by default in Angular 21 — no need for `provideHttpClient()` in basic cases (we still use it for `withInterceptors()`)
 
 ### 7. HTTP & Interceptors
 
@@ -305,6 +341,7 @@ export interface Config {
 
 - Prefer calling signals in templates: `{{ mySignal() }}` not `{{ myProperty }}`
 - Use `@if` / `@for` / `@switch` for control flow (see section 4)
+- Use `@let` for template-local variables: `@let user = authService.user();`
 - Keep templates declarative — avoid complex logic, move it to `computed()` signals
 - Use `[class.active]="isActive()"` for conditional CSS classes
 - Use `(click)="handler()"` — never bind to getters that compute on every CD cycle
@@ -313,16 +350,25 @@ export interface Config {
 ### 11. Performance
 
 - Lazy-load all feature components via `loadComponent`
-- Use `ChangeDetectionStrategy.OnPush` on all components where applicable
+- App is **zoneless** (`provideZonelessChangeDetection()`) — change detection is signal-driven, no zone.js overhead
+- With zoneless, `OnPush` is not needed — but it doesn't hurt to add it for clarity
 - Prefer signals over `async` pipe for better performance
 - Use `track` in `@for` loops for efficient DOM recycling
 - Avoid unnecessary `subscribe()` — prefer declarative signal/computed chains
-- App uses `provideZonelessChangeDetection()` — no zone.js
+- Consider `resource()` / `httpResource()` for signal-driven async data loading
 - Consider `DestroyRef` + `takeUntilDestroyed()` for subscription cleanup
 
 ### 12. Subscription Management
 
 ```typescript
+// Preferred: takeUntilDestroyed() in field initializer (injection context)
+export class MyComponent {
+  private data$ = inject(DataService).data$.pipe(
+    takeUntilDestroyed()  // no DestroyRef needed when called in injection context
+  );
+}
+
+// If subscribing in ngOnInit or other methods (outside injection context):
 export class MyComponent {
   private destroyRef = inject(DestroyRef);
 
@@ -337,28 +383,62 @@ export class MyComponent {
 ```
 
 **Rules:**
-- Use `takeUntilDestroyed()` with `DestroyRef` for automatic cleanup
+- Use `takeUntilDestroyed()` without arguments in field initializers (injection context) — simplest pattern
+- Use `takeUntilDestroyed(this.destroyRef)` when subscribing outside the injection context (ngOnInit, callbacks)
 - Never manually `unsubscribe` unless absolutely necessary
 - Prefer signals over subscriptions when possible
 - For one-off HTTP calls, manual unsubscription is optional (they auto-complete)
+- Consider `resource()` / `httpResource()` to avoid manual subscriptions entirely
 
 ---
 
 ## UI Components
 
-### Prefer `common-parts` Library
+### `@citadele/common-parts` — Always Use First
 
-Before creating custom UI, check if `@citadele/common-parts` has a suitable component:
+`@citadele/common-parts` is an internal UI library maintained by another team. It is installed as a local dependency (`file:common-parts/dist/common-parts`). The source lives in `./common-parts/` but **we do not modify it** — we only consume the built package.
+
+**Import from:** `@citadele/common-parts`
+
+```typescript
+import { ButtonComponent, InputComponent, TableComponent } from '@citadele/common-parts';
+```
 
 **Available components:**
-- **Forms:** `Button`, `Input`, `Dropdown`, `Select`, `DateInput`, `CurrencyInput`, `PasswordInput`, `OtpInput`, `CheckboxDropdown`
-- **Layout:** `SideNav`, `SidePanel`, `PageCard`, `Breadcrumbs`, `Tabs`
-- **Data display:** `Table`, `Paginator`, `Badge`, `Message`, `Notification`, `Loader`, `NoData`
-- **Complex:** `Accordion`, `ModalHost`, `FormBaker`, `EntityCard`, `PaymentDetailCard`
-- **Directives:** `HasPrivilegesDirective`, `ClickOutsideDirective`, `FitInViewportDirective`
-- **Services:** `ModalHostService`, `SidePanelService`, `PrivilegesService`, `LoaderService`
 
-Only use Angular Material when no suitable component exists in `common-parts`.
+| Category | Components |
+|----------|-----------|
+| **Buttons** | `ButtonComponent`, `IconButtonComponent`, `ActiveButtonComponent`, `BackButtonComponent`, `CancelButtonComponent`, `DropdownButtonComponent`, `QuickActionComponent` |
+| **Inputs** | `InputComponent`, `DateInputComponent`, `FulldateInputComponent`, `CurrencyInputComponent`, `PasswordInputComponent`, `OtpInputComponent`, `SelectComponent`, `SelectTableComponent`, `DropdownComponent`, `RadioComponent`, `VerticalInputComponent`, `CheckboxDropdownComponent` |
+| **Layout** | `SideNavComponent`, `SidePanelComponent`, `PageCardComponent`, `BreadcrumbsComponent`, `TabsComponent`, `AccordionComponent`, `AccordionPanelComponent`, `ExpansionPanelComponent`, `CollapsibleComponent`, `HorizontalContainerComponent` |
+| **Data display** | `TableComponent`, `PaginatorComponent`, `BadgeComponent`, `CircleBadgeComponent`, `MessageComponent`, `NotificationComponent`, `LoaderComponent`, `LoadingOverlayComponent`, `NoDataComponent`, `ReadOnlyComponent` |
+| **Cards** | `EntityCardComponent`, `PaymentDetailCardComponent`, `MetaCardComponent`, `MetricBoxComponent`, `RadioCardComponent`, `LinkCardComponent`, `LinkCardCollectionComponent` |
+| **Complex** | `ModalHostComponent`, `FormBakerComponent`, `FormFieldComponent`, `ContextMenuComponent` |
+| **Atoms** | `AlertNotificationComponent`, `ChartComponent`, `EmptyStateComponent`, `InlineMetricComponent`, `SkeletonComponent`, `StepperComponent`, `TooltipComponent`, `WidgetBannerComponent` |
+
+**Available directives:**
+- `HasPrivilegesDirective` — show/hide elements based on user permissions
+- `ClickOutsideDirective` — detect clicks outside an element
+- `FitInViewportDirective` — fit element within viewport
+- `ClickStopPropogationDirective` — stop event propagation
+- `TooltipDirective` — tooltip behavior
+
+**Available services:**
+- `ModalHostService` — open/close modals programmatically
+- `SidePanelService` — manage side panel
+- `PrivilegesService` — check user privileges
+- `LoaderService` — global loader state
+- `LocaleService` — i18n (supports EN, EE, LT, LV, RU)
+- `BreakpointObserverService` — responsive breakpoint detection
+- `PageTransferService` — page navigation events
+
+**Available pipes:** `AmountWithSpacesPipe`
+
+**Available validators:** `AmountValidators`, `DateRangeValidator`
+
+### When to use Angular Material
+
+Only use Angular Material components when `@citadele/common-parts` does **not** have a suitable component for the use case. If Angular Material is needed, install it separately (`@angular/material`).
 
 ---
 
@@ -391,12 +471,15 @@ Only use Angular Material when no suitable component exists in `common-parts`.
 
 ## Testing
 
-- Test runner: Vitest (via `@angular/build:unit-test`)
+- Test runner: Vitest 4 (via `@angular/build:unit-test`)
 - Test files: `*.spec.ts` alongside the source file
 - Tests are currently skipped by default in schematics
 - When writing tests, prefer `TestBed` with standalone component setup
 - Mock services using `vi.fn()` or provide stubs
 - Run tests with `npx ng test`
+- **Zoneless testing:** Use `await fixture.whenStable()` instead of `fixture.detectChanges()` for async operations
+- Use `provideHttpClient()` + `provideHttpClientTesting()` with `HttpTestingController` for HTTP tests
+- Run guards in tests with `TestBed.runInInjectionContext(() => guard(route, state))`
 
 ---
 
