@@ -1,8 +1,9 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, BehaviorSubject, catchError, of } from 'rxjs';
+import { Observable, tap, BehaviorSubject, catchError, of, from, switchMap } from 'rxjs';
 import { User, AuthResponse } from '../models/user.model';
+import { CryptoService } from './crypto.service';
 import { DynamicRouteService } from './dynamic-route.service';
 
 @Injectable({
@@ -26,6 +27,7 @@ export class AuthService {
   userPermissions = computed(() => this._user()?.permissions || []);
 
   private dynamicRouteService = inject(DynamicRouteService);
+  private cryptoService = inject(CryptoService);
 
   constructor(
     private http: HttpClient,
@@ -62,13 +64,15 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(
-      `${this.API_URL}/login`,
-      { username, password },
-      { withCredentials: true } // Important: send/receive cookies
-    ).pipe(
+    return from(this.cryptoService.encryptPassword(password)).pipe(
+      switchMap(encryptedPassword =>
+        this.http.post<AuthResponse>(
+          `${this.API_URL}/login`,
+          { username, password: encryptedPassword },
+          { withCredentials: true }
+        )
+      ),
       tap(response => {
-        // Token is in httpOnly cookie, user info is in response body
         const user: User = {
           userId: response.userId,
           username: response.username,
