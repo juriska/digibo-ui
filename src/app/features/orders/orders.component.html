@@ -1,0 +1,169 @@
+<div class="free-form-orders">
+
+  <!-- Header with loading indicator -->
+  <div class="page-header">
+    <h1>Free Form Orders</h1>
+    @if (isLoading()) {
+      <div class="loading-indicator">
+        <div class="spinner-sm"></div>
+        <small>Loading orders...</small>
+      </div>
+    }
+  </div>
+
+  <!-- Delivery Address Panel -->
+  <cit-expansion-panel [content]="deliveryAddressPanel">
+    <div class="form-grid">
+      <div class="form-column">
+        <div class="form-row">
+          <label class="form-label">Full Name</label>
+          <cit-input placeholder="John Deo" [(ngModel)]="fullName" name="fullName" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Address</label>
+          <cit-input placeholder="150 Foot Ring Road" [(ngModel)]="address" name="address" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">City</label>
+          <cit-input placeholder="Jackson" [(ngModel)]="city" name="city" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Address Type</label>
+          <cit-radio [options]="addressTypeOptions" [(ngModel)]="addressType" name="addressType" />
+        </div>
+      </div>
+      <div class="form-column">
+        <div class="form-row">
+          <label class="form-label">Phone</label>
+          <cit-input placeholder="123 4561 213" [(ngModel)]="phone" name="phone" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Pincode</label>
+          <cit-input placeholder="630012" [(ngModel)]="pincode" name="pincode" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Landmark</label>
+          <cit-input placeholder="Nr. wall street" [(ngModel)]="landmark" name="landmark" />
+        </div>
+      </div>
+    </div>
+  </cit-expansion-panel>
+
+  <!-- Delivery Options Panel -->
+  <cit-expansion-panel [content]="deliveryOptionsPanel">
+    <cit-radio [options]="deliveryOptions" [(ngModel)]="deliveryOption" name="deliveryOption" />
+  </cit-expansion-panel>
+
+  <cit-radio [options]="paymentMethodOptions" [(ngModel)]="paymentMethod" name="paymentMethod" />
+
+  <!-- Payment Method Panel -->
+  <cit-expansion-panel [content]="paymentMethodPanel">
+    <cit-radio [options]="paymentMethodOptions" [(ngModel)]="paymentMethod" name="paymentMethod" />
+    <div class="payment-card-form">
+      <label class="form-label-block">Card Number</label>
+      <cit-input placeholder="123 200 540 620" [(ngModel)]="cardNumber" name="cardNumber" />
+      <div class="card-details-row">
+        <div class="card-detail">
+          <label class="form-label-block">Name</label>
+          <cit-input placeholder="John Deo" [(ngModel)]="cardName" name="cardName" />
+        </div>
+        <div class="card-detail">
+          <label class="form-label-block">Exp. Date</label>
+          <cit-input placeholder="MM/YY" [(ngModel)]="cardExpiry" name="cardExpiry" />
+        </div>
+        <div class="card-detail">
+          <label class="form-label-block">CCV Code</label>
+          <cit-input placeholder="2501" [(ngModel)]="cardCcv" name="cardCcv" />
+        </div>
+      </div>
+    </div>
+  </cit-expansion-panel>
+
+  <!-- Date Filters Panel -->
+  <cit-expansion-panel [content]="dateFiltersPanel">
+    <div class="filter-row">
+      <div class="filter-field">
+        <label class="form-label-block">Date From</label>
+        <cit-date-input
+          [value]="dateFrom!"
+          placeholder="Start date"
+          [yearsLimit]="10"
+           />
+      </div>
+      <!--<div class="filter-field">
+        <label class="form-label-block">Date Till</label>
+        <cit-date-input
+          [value]="dateTill!"
+          placeholder="End date"
+          (dateValueChanges$)="onDateTillChange($event)" />
+      </div> -->
+    </div>
+  </cit-expansion-panel>
+
+  <!-- Document Filters Panel -->
+  <!--<cit-expansion-panel [content]="documentFiltersPanel">
+    <div class="filter-row">
+      <div class="filter-field">
+        <label class="form-label-block">Document Number</label>
+        <cit-input
+          placeholder="Enter document number"
+          [(ngModel)]="documentNumber"
+          (ngModelChange)="onDocumentNumberChange()"
+          name="documentNumber" />
+      </div>
+      <div class="filter-field">
+        <label class="form-label-block">Document Type</label>
+        <cit-dropdown
+          [options]="documentTypeOptions"
+          [value]="documentType"
+          placeholder="Select category"
+          (valueChange)="onDocumentTypeChange($event)" />
+      </div>
+    </div>
+  </cit-expansion-panel>-->
+
+  <!-- Action Buttons -->
+  <div class="actions-bar">
+    <cit-button appearance="primary" (click$)="onSearch()">
+      Search
+    </cit-button>
+    <cit-button appearance="secondary" (click$)="onClearAllFilters()">
+      Clear All Filters
+    </cit-button>
+  </div>
+
+  <!-- Documents Table -->
+  <cit-page-card>
+    <div class="table-header">
+      <h2>Documents</h2>
+      @if (!isLoading() && !hasError()) {
+        <span class="record-info">Found {{ totalCount() }} document(s)</span>
+      }
+      @if (isLoading()) {
+        <span class="text-muted">Loading documents...</span>
+      }
+      @if (hasError()) {
+        <span class="text-danger">{{ errorMessage() }}</span>
+      }
+    </div>
+
+    <app-data-table
+      [columns]="tableColumns"
+      [data]="documents()"
+      [loading]="isLoading()"
+      [totalCount]="totalCount()"
+      [striped]="true"
+      [hover]="true"
+      noDataMessage="No FFO documents found. Try adjusting your filters."
+      (rowClick)="onRowClick($event)" />
+  </cit-page-card>
+
+  <!-- Document Viewer Side Panel -->
+  <app-document-viewer
+    [documentId]="selectedDocumentId"
+    [documentTitle]="selectedDocumentTitle"
+    [isOpen]="isDocumentViewerOpen"
+    [width]="'700px'"
+    (close)="closeDocumentViewer()"
+    (documentLoaded)="onDocumentLoaded($event)" />
+</div>
