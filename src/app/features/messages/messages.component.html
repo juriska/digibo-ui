@@ -1,0 +1,73 @@
+<div class="messages-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Messages</h1>
+  </div>
+
+  <!-- Filter Panels -->
+  <div class="filters-section">
+    <app-user-filter [(filter)]="userFilter" />
+    <app-message-filter [(filter)]="messageFilter" />
+    <app-customer-filter [(filter)]="customerFilter" />
+    <app-channel-filter [(filter)]="channelFilter" />
+    <app-status-filter [(filter)]="statusFilter" />
+    <app-date-filter [(filter)]="dateFilter" />
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="actions-bar">
+    <cit-button appearance="primary" (click$)="onSearch()">
+      Select
+    </cit-button>
+    <cit-button appearance="secondary" (click$)="onClearFilters()">
+      My new messages
+    </cit-button>
+    <cit-button appearance="secondary" (click$)="onRowClick(messages()[0])">
+      Open
+    </cit-button>
+  </div>
+
+  <!-- Results Table -->
+  <cit-page-card>
+    <div class="table-header">
+      <h2>Results</h2>
+      <span class="record-info">Found {{ totalCount() }} message(s)</span>
+    </div>
+
+    <app-data-table
+      [columns]="tableColumns"
+      [data]="messages()"
+      [totalCount]="totalCount()"
+      [striped]="true"
+      [hover]="true"
+      noDataMessage="No messages found. Try adjusting your filters."
+      (rowClick)="onRowClick($event)" />
+  </cit-page-card>
+
+  <!-- Event Log Panel (placeholder) -->
+  <cit-page-card>
+    <div class="table-header">
+      <h2>Event Log</h2>
+    </div>
+    <div class="event-log-placeholder">
+      <table class="event-log-table">
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Type ID</th>
+            <th>Timestamp</th>
+            <th>Status</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="5" class="no-events">No events recorded</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </cit-page-card>
+
+</div>

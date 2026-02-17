@@ -1,0 +1,100 @@
+.messages-page {
+  padding: 20px;
+  max-width: 1400px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #1a1a2e;
+  }
+}
+
+// Filter panels spacing
+.filters-section {
+  margin-bottom: 16px;
+
+  app-user-filter,
+  app-message-filter,
+  app-customer-filter,
+  app-channel-filter,
+  app-status-filter,
+  app-date-filter {
+    display: block;
+    margin-bottom: 8px;
+  }
+}
+
+// Actions bar
+.actions-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+// Table section
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #1a1a2e;
+  }
+}
+
+.record-info {
+  font-size: 14px;
+  color: #666;
+}
+
+// Event log
+.event-log-placeholder {
+  overflow-x: auto;
+}
+
+.event-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+  }
+
+  .no-events {
+    text-align: center;
+    padding: 24px 16px;
+    color: #999;
+  }
+}
+
+// Page cards spacing
+cit-page-card {
+  display: block;
+  margin-bottom: 16px;
+}
