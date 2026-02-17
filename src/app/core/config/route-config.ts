@@ -34,5 +34,12 @@ export const FEATURE_ROUTES: FeatureRouteConfig[] = [
     icon: '💳',
     roles: ['RBOPAYMENT', 'RBOPAYMENTVIEW'],
     loadChildren: () => import('../../features/payments/payments.routes').then(m => m.PAYMENTS_ROUTES)
+  },
+  {
+    path: 'messages',
+    label: 'Messages',
+    icon: '✉️',
+    roles: ['RBOFFMESSAGES'],
+    loadChildren: () => import('../../features/messages/messages.routes').then(m => m.MESSAGES_ROUTES)
   }
 ];

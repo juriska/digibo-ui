@@ -65,6 +65,7 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="role-tags">
                 <span class="tag orders">ORDERS</span>
                 <span class="tag payments">PAYMENTS</span>
+                <span class="tag messages">MESSAGES</span>
               </span>
             </button>
             <button class="mock-user-btn" (click)="quickLogin('user2', 'password2')" [disabled]="loading">
@@ -263,6 +264,11 @@ import { AuthService } from '../../core/services/auth.service';
     .mock-user-btn .tag.payments {
       background: #e8f5e9;
       color: #2e7d32;
+    }
+
+    .mock-user-btn .tag.messages {
+      background: #fff3e0;
+      color: #e65100;
     }
 
   `]

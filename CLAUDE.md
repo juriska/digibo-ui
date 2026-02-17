@@ -15,6 +15,14 @@
 
 ---
 
+## Related Projects
+
+| Project | Path                  | Description |
+|---------|-----------------------|-------------|
+| **digibo-ui** | `.\digibo-ui`         | Angular frontend (this UI) |
+| **digibo-core-java** | `..\digibo-core-java` | Java/Spring Boot backend API (auth, business logic). Mock users and roles are defined in `src/main/java/com/digibo/core/security/MockAuthenticationProvider.java`. Runs on `http://localhost:3000`. |
+
+
 ## Project Structure
 
 ```
